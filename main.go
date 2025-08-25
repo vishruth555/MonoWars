@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"MonoWars/game"
+	"github.com/vishruth555/MonoWars/game"
 )
 
 func main() {

@@ -1,10 +1,11 @@
 package game
 
 import (
-	"MonoWars/game/utils"
 	"fmt"
 	"net/http"
 	"sync"
+
+	"github.com/vishruth555/MonoWars/game/utils"
 
 	"github.com/gorilla/websocket"
 )

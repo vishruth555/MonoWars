@@ -45,12 +45,12 @@ func NewPlayer(id int, conn *websocket.Conn) *Player {
 	var bullets int = 10
 
 	if id == 1 {
-		x = 9.0
-		y = 4.0
+		x = 8.0
+		y = 3.0
 		dir = Down
 	} else {
-		x = 4.0
-		y = 13.0
+		x = 3.0
+		y = 12.0
 		dir = Up
 	}
 

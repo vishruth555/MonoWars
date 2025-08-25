@@ -1,4 +1,4 @@
-module MonoWars
+module github.com/vishruth555/MonoWars
 
 go 1.22.4
 

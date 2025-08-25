@@ -62,7 +62,7 @@ func (g *Game) Start() {
 	go g.Players[0].Listen(Player1Chan)
 	go g.Players[1].Listen(Player2Chan)
 
-	tick := time.NewTicker(1 * time.Second)
+	tick := time.NewTicker(40 * time.Millisecond)
 	count := 0
 
 	for {
