@@ -14,6 +14,9 @@ type GameInit struct {
 	Player1 PlayerData  `json:"player1Data"`
 	Player2 PlayerData  `json:"player2Data"`
 }
+type GameEnd struct {
+	Type string `json:"type"`
+}
 
 type Tick struct {
 	Type string `json:"type"`
@@ -27,9 +30,21 @@ type Diff struct {
 }
 
 type PlayerData struct {
-	Id   int     `json:"id"`
-	XPos float32 `json:"xPos"`
-	YPos float32 `json:"yPos"`
+	Id      int     `json:"id"`
+	XPos    float32 `json:"xPos"`
+	YPos    float32 `json:"yPos"`
+	Bullets int     `json:"bullets"`
+}
+type BulletData struct {
+	Id    int     `json:"id"`
+	XPos  float32 `json:"xPos"`
+	YPos  float32 `json:"yPos"`
+	State string  `json:"state"`
+}
+type TileMapData struct {
+	Id   int `json:"id"`
+	XPos int `json:"xPos"`
+	YPos int `json:"yPos"`
 }
 
 func Broadcast(g *Game, data any) {
@@ -45,24 +60,89 @@ func SendGameInit(g *Game) {
 	data := GameInit{
 		Type:    "GameStart",
 		TileMap: g.TileMap,
-		Player1: PlayerData{Id: g.Players[0].Id, XPos: g.Players[0].X, YPos: g.Players[0].Y},
-		Player2: PlayerData{Id: g.Players[1].Id, XPos: g.Players[1].X, YPos: g.Players[1].Y}}
+		Player1: PlayerData{Id: g.Players[0].Id, XPos: g.Players[0].X, YPos: g.Players[0].Y, Bullets: g.Players[0].Bullets},
+		Player2: PlayerData{Id: g.Players[1].Id, XPos: g.Players[1].X, YPos: g.Players[1].Y, Bullets: g.Players[1].Bullets}}
+	Broadcast(g, data)
+}
+func SendGameEnd(g *Game) {
+	data := GameEnd{
+		Type: "GameEnd",
+	}
 	Broadcast(g, data)
 }
 
-func SendTick(g *Game, tickCount int) {
+func SendTick(g *Game, tickCount int) bool {
 	var diffs []Diff
+	isGameOver := false
 
-	for _, player := range g.Players {
-		if player.Vely == 0 && player.Velx == 0 {
-			continue
+	//player diffs
+	for index, player := range g.Players {
+		isChanged := g.MovePlayer(index)
+		if isChanged {
+			diffs = append(diffs, Diff{
+				Entity: fmt.Sprintf("Player%dData", player.Id),
+				Data:   PlayerData{Id: player.Id, XPos: player.X, YPos: player.Y, Bullets: player.Bullets},
+			})
 		}
-		player.X += player.Velx
-		player.Y += player.Vely
+	}
+	//store old copy of tileMap
+	tileMap := g.TileMap
+
+	//bullet diffs
+	for index, bullet := range g.Bullets {
+		isActive := g.MoveBullet(index)
+		bulletData := BulletData{Id: bullet.Id, XPos: bullet.X, YPos: bullet.Y}
+		if isActive {
+			bulletData.State = "active"
+		} else {
+			bulletData.State = "expired"
+		}
 		diffs = append(diffs, Diff{
-			Entity: fmt.Sprintf("player%dData", player.Id),
-			Data:   PlayerData{Id: player.Id, XPos: player.X, YPos: player.Y},
+			Entity: "BulletData",
+			Data:   bulletData,
 		})
+	}
+
+	//tileMap diffs
+	for i := 0; i < len(tileMap); i++ {
+		for j := 0; j < len(tileMap[i]); j++ {
+			if tileMap[i][j] != g.TileMap[i][j] {
+
+				fmt.Printf("Changed at [%d][%d]: %d -> %d\n",
+					i, j, tileMap[i][j], g.TileMap[i][j])
+
+				diffs = append(diffs, Diff{
+					Entity: "TileMapData",
+					Data: TileMapData{
+						Id:   g.TileMap[i][j],
+						XPos: j,
+						YPos: i,
+					},
+				})
+			}
+		}
+	}
+
+	//game over check
+	for _, bullet := range g.Bullets {
+		var dx, dy int
+		if bullet.Id == 1 {
+			dx = int(bullet.X) - int(g.Players[1].X)
+			dy = int(bullet.Y) - int(g.Players[1].Y)
+			if dx == 0 && dy == 0 {
+				//game over for player2
+				isGameOver = true
+				break
+			}
+		} else if bullet.Id == 2 {
+			dx = int(bullet.X) - int(g.Players[0].X)
+			dy = int(bullet.Y) - int(g.Players[0].Y)
+			if dx == 0 && dy == 0 {
+				//game over for player1
+				isGameOver = true
+				break
+			}
+		}
 	}
 
 	data := Tick{
@@ -71,4 +151,5 @@ func SendTick(g *Game, tickCount int) {
 		Diff: diffs,
 	}
 	Broadcast(g, data)
+	return isGameOver
 }

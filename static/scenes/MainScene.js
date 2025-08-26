@@ -33,6 +33,9 @@ class MainScene extends Phaser.Scene {
       else if (data.type == "Tick") {
         this.handleDiffs(data.diff)
       }
+      else if(data.type == "GameEnd"){
+        console.log("game has ended")
+      }
 
     };
 
@@ -41,6 +44,7 @@ class MainScene extends Phaser.Scene {
 
     createTileMap(mapLayout){
       this.tileMap = mapLayout
+      this.tileSprites = [];
       const rows = mapLayout.length;
       const cols = mapLayout[0].length;
       // Calculate the largest possible tile size that fits both width and height
@@ -55,6 +59,7 @@ class MainScene extends Phaser.Scene {
       this.horizontalPadding = (this.sys.game.config.width - gridWidth) / 2;
 
       for (let y = 0; y < rows; y++) {
+        this.tileSprites[y] = []
         for (let x = 0; x < cols; x++) {
           const cell = mapLayout[y][x];
 
@@ -70,7 +75,7 @@ class MainScene extends Phaser.Scene {
           }
 
           // Place tile sprite with padding and square aspect ratio
-          this.add.image(
+          this.tileSprites[y][x] = this.add.image(
             x * this.tileSize + this.horizontalPadding,
             y * this.tileSize + this.verticalPadding,
             tileKey
@@ -142,11 +147,24 @@ class MainScene extends Phaser.Scene {
       console.log("Handling diffs:", diffs);
       diffs.forEach(diff => {
         switch (diff.entity) {
-          case "player1Data":
+          case "Player1Data":
             this.movePlayer(0, diff.data.xPos, diff.data.yPos)
             break;
-          case "player2Data":
+          case "Player2Data":
             this.movePlayer(1, diff.data.xPos, diff.data.yPos)
+            break;
+          case "TileMapData":
+            let xPos = diff.data.xPos
+            let yPos = diff.data.yPos
+            if (diff.data.id == 1){
+              this.tileSprites[yPos][xPos].setTexture("tileW")
+            }
+            else if (diff.data.id == 2){
+              this.tileSprites[yPos][xPos].setTexture("tileB")
+            }
+            break;
+          case "BulletData":
+            //render different bullets
             break;
         }
       });

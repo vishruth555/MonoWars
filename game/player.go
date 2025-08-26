@@ -6,6 +6,8 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+const MaxBulletCount = 10
+
 type Player struct {
 	Id      int
 	Conn    *websocket.Conn
@@ -42,9 +44,8 @@ type Input struct {
 func NewPlayer(id int, conn *websocket.Conn) *Player {
 	var x, y float32
 	var dir Direction
-	var bullets int = 10
 
-	if id == 1 {
+	if id == 2 {
 		x = 8.0
 		y = 3.0
 		dir = Down
@@ -59,7 +60,7 @@ func NewPlayer(id int, conn *websocket.Conn) *Player {
 		Conn:    conn,
 		X:       x,
 		Y:       y,
-		Bullets: bullets,
+		Bullets: MaxBulletCount,
 		Dir:     dir,
 	}
 }
@@ -97,14 +98,15 @@ func (p *Player) SetDirection() {
 	}
 }
 
-func (p *Player) HandleInput(input Input) {
+func (p *Player) HandleInput(input Input) bool {
 	switch input.Type {
 	case Move:
 		p.SetVelocity(input.Dx, input.Dy)
 		p.SetDirection()
 
 	case Shoot:
-		//TODO handle bullets
+		p.Bullets--
+		return true
 	}
-
+	return false
 }
