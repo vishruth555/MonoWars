@@ -11,10 +11,11 @@ import (
 )
 
 type Game struct {
-	Id      int         `json:"id"`
-	TileMap [16][12]int `json:"tileMap"` // 0: empty, 1: white, 2: black , defined as [y][x]
-	Players []*Player   `json:"players"`
-	Bullets []*Bullet   `json:"bullets"`
+	Id       int         `json:"id"`
+	TileMap  [16][12]int `json:"tileMap"` // 0: empty, 1: white, 2: black , defined as [y][x]
+	Players  []*Player   `json:"players"`
+	Bullets  []*Bullet   `json:"bullets"`
+	tickRate time.Duration
 }
 
 var (
@@ -50,10 +51,11 @@ func NewGame(player1Conn, player2Conn *websocket.Conn) *Game {
 
 	roomID++
 	return &Game{
-		Id:      roomID,
-		TileMap: mapLayout1,
-		Players: []*Player{player1, player2},
-		Bullets: []*Bullet{},
+		Id:       roomID,
+		TileMap:  mapLayout1,
+		Players:  []*Player{player1, player2},
+		Bullets:  []*Bullet{},
+		tickRate: 40 * time.Millisecond,
 	}
 }
 
@@ -66,7 +68,7 @@ func (g *Game) Start() {
 	go g.Players[1].Listen(Player2Chan)
 
 	// tick := time.NewTicker(1 * time.Second)
-	tick := time.NewTicker(40 * time.Millisecond)
+	tick := time.NewTicker(g.tickRate)
 	count := 0
 
 	for {
@@ -105,11 +107,15 @@ func (g *Game) Start() {
 
 func (g *Game) MovePlayer(index int) bool {
 	player := g.Players[index]
+	dt := float32(g.tickRate) / float32(time.Second)
+
+	player.ApplyVelocity(dt)
+	player.ApplyFriction(dt)
+
 	if player.Vely == 0 && player.Velx == 0 {
 		return false
 	}
-	// player.X += player.Velx
-	// player.Y += player.Vely
+
 	newX := player.X + player.Velx
 	newY := player.Y + player.Vely
 
@@ -126,6 +132,7 @@ func (g *Game) MovePlayer(index int) bool {
 			return true
 		}
 	}
+	player.Stop()
 	return false
 }
 

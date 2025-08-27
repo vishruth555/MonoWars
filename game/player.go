@@ -17,6 +17,8 @@ type Player struct {
 	Dir     Direction
 	Velx    float32
 	Vely    float32
+	ay      float32
+	ax      float32
 }
 
 type Direction int
@@ -79,21 +81,24 @@ func (p *Player) Listen(ws chan Input) {
 	}
 }
 
-const ()
+// func (p *Player) SetVelocity(dx, dy float32) {
+// 	p.Velx = dx
+// 	p.Vely = dy
+// }
 
-func (p *Player) SetVelocity(dx, dy float32) {
-	p.Velx = dx
-	p.Vely = dy
+func (p *Player) setAcceleration(dx, dy float32) {
+	p.ay = dy
+	p.ax = dx
 }
 func (p *Player) SetDirection() {
 	switch {
-	case p.Velx < 0:
+	case p.ax < 0:
 		p.Dir = Left
-	case p.Velx > 0:
+	case p.ax > 0:
 		p.Dir = Right
-	case p.Vely < 0:
+	case p.ay < 0:
 		p.Dir = Up
-	case p.Vely > 0:
+	case p.ay > 0:
 		p.Dir = Down
 	}
 }
@@ -101,12 +106,67 @@ func (p *Player) SetDirection() {
 func (p *Player) HandleInput(input Input) bool {
 	switch input.Type {
 	case Move:
-		p.SetVelocity(input.Dx, input.Dy)
+		p.setAcceleration(input.Dx, input.Dy)
 		p.SetDirection()
 
 	case Shoot:
-		p.Bullets--
+		// p.Bullets--
 		return true
 	}
 	return false
+}
+
+const (
+	friction = 0.2
+	MaxSpeed = 0.2
+)
+
+func (p *Player) ApplyVelocity(dt float32) {
+	p.Velx += p.ax * dt
+	if p.Velx > MaxSpeed {
+		p.Velx = MaxSpeed
+	} else if p.Velx < -MaxSpeed {
+		p.Velx = -MaxSpeed
+	}
+
+	p.Vely += p.ay * dt
+	if p.Vely > MaxSpeed {
+		p.Vely = MaxSpeed
+	} else if p.Vely < -MaxSpeed {
+		p.Vely = -MaxSpeed
+	}
+
+}
+
+func (p *Player) ApplyFriction(dt float32) {
+
+	if p.Velx > 0 {
+		p.Velx -= friction * dt
+		if p.Velx < 0 {
+			p.Velx = 0
+		}
+	} else if p.Velx < 0 {
+		p.Velx += friction * dt
+		if p.Velx > 0 {
+			p.Velx = 0
+		}
+	}
+
+	if p.Vely > 0 {
+		p.Vely -= friction * dt
+		if p.Vely < 0 {
+			p.Vely = 0
+		}
+	} else if p.Vely < 0 {
+		p.Vely += friction * dt
+		if p.Vely > 0 {
+			p.Vely = 0
+		}
+	}
+
+}
+
+func (p *Player) Stop() {
+	p.Velx = 0
+	p.Vely = 0
 }

@@ -15,12 +15,14 @@ let ws;
 
 // input handlers
 
+const PLAYER_SPEED = 1
+
 function enableInput() {
   document.getElementById('shoot').addEventListener('click',() => emitMove(1,0,0));
-  hold(document.getElementById('up'),0,-0.1);
-  hold(document.getElementById('down'),0,0.1);
-  hold(document.getElementById('left'),-0.1,0);
-  hold(document.getElementById('right'),0.1,0);
+  hold(document.getElementById('up'),0,-PLAYER_SPEED);
+  hold(document.getElementById('down'),0,PLAYER_SPEED);
+  hold(document.getElementById('left'),-PLAYER_SPEED,0);
+  hold(document.getElementById('right'),PLAYER_SPEED,0);
 }
 function emitMove(type, dx, dy){
   console.log(JSON.stringify({type:type,dx:dx,dy:dy}))
