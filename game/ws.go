@@ -36,10 +36,11 @@ type PlayerData struct {
 	Bullets int     `json:"bullets"`
 }
 type BulletData struct {
-	Id    int     `json:"id"`
-	XPos  float32 `json:"xPos"`
-	YPos  float32 `json:"yPos"`
-	State string  `json:"state"`
+	Id       int     `json:"id"`
+	BulletId int     `json:"bulletId"`
+	XPos     float32 `json:"xPos"`
+	YPos     float32 `json:"yPos"`
+	State    string  `json:"state"`
 }
 type TileMapData struct {
 	Id   int `json:"id"`
@@ -90,8 +91,11 @@ func SendTick(g *Game, tickCount int) bool {
 
 	//bullet diffs
 	for index, bullet := range g.Bullets {
+		if !bullet.isActive {
+			continue
+		}
 		isActive := g.MoveBullet(index)
-		bulletData := BulletData{Id: bullet.Id, XPos: bullet.X, YPos: bullet.Y}
+		bulletData := BulletData{Id: bullet.Id, BulletId: index + 1, XPos: bullet.X, YPos: bullet.Y}
 		if isActive {
 			bulletData.State = "active"
 		} else {

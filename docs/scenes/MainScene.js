@@ -2,6 +2,7 @@ class MainScene extends Phaser.Scene {
     constructor() {
         super("MainScene");
         this.players = []
+        this.bullets = []
     }
 
     preload() {
@@ -165,10 +166,35 @@ class MainScene extends Phaser.Scene {
             }
             break;
           case "BulletData":
-            //render different bullets
+              this.renderBullet(diff.data)
             break;
         }
       });
+
+    }
+
+    renderBullet(data){
+      console.log("handling bullet data: ", data)
+      const {bulletId, id, state, xPos, yPos} = data;
+
+      if (state == "active"){
+        if(!this.bullets[bulletId]) {
+          const bullet = this.add
+          .image(this.getX(xPos), this.getY(yPos), "player")                
+          .setOrigin(0)
+          .setDisplaySize(this.tileSize, this.tileSize);
+          
+          bullet.setTint(id === 1 ? 0xff0000 : 0x0000ff); // red/blue per player
+          this.bullets[bulletId] = bullet;
+        } else {
+          this.bullets[bulletId].setPosition(this.getX(xPos), this.getY(yPos))
+        }
+      } else {
+        if (this.bullets[bulletId]) {
+          this.bullets[bulletId].destroy();
+          delete this.bullets[bulletId]
+        }
+      }
 
     }
 

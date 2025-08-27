@@ -152,17 +152,13 @@ func (g *Game) MoveBullet(index int) bool {
 	}
 
 	if g.TileMap[yPos][xPos] == 0 {
-		g.DeleteBullet(index)
+		g.Bullets[index].isActive = false
 		return false
 	}
 	if g.TileMap[yPos][xPos] == bullet.Id {
 		g.SwapTile(xPos, yPos)
 	}
 	return true
-}
-
-func (g *Game) DeleteBullet(index int) {
-	g.Bullets = append(g.Bullets[:index], g.Bullets[index+1:]...)
 }
 
 func (g *Game) SwapTile(xPos, yPos int) {
