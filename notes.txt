@@ -1,0 +1,30 @@
+TODO
+
+# backend
+
+-> which player won is not saved and logged for frontend
+-> finish ui to figure out bugs
+
+
+# frontend
+
+-> add bullet rendering logic with dummy sprites
+
+-> make the ui responsive for all devices and change layout to a proper gameboy for mobile devices
+best dimensions found as of now 
+450 x 854 -> full ui
+390 x 515 -> canvas
+430 x 557 -> parent div #gameArea
+
+-> draw sprites 
+players
+bullets
+tiles
+
+-> draw images
+background (not sure how this will work)
+lobby screen
+waiting screen
+in-game start and end screens
+
+->animations

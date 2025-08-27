@@ -41,13 +41,7 @@ func (l *Lobby) AddPlayer(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("game start for", opponent.RemoteAddr(), " and ", player.RemoteAddr())
 		game := NewGame(opponent, player)
 		go game.Start()
-		// game.AddPlayer(1, opponent)
-		// game.AddPlayer(2, player)
 		game.PrintState()
 	}
 	l.mu.Unlock()
 }
-
-// func (l *Lobby) AddRoom(id int) {
-// 	l.Rooms[id] = NewGame()
-// }

@@ -51,6 +51,7 @@ class MainScene extends Phaser.Scene {
       const tileWidth = this.sys.game.config.width / cols;
       const tileHeight = this.sys.game.config.height / rows;
       this.tileSize = Math.min(tileWidth, tileHeight);
+      console.log("tileSize: ",this.tileSize)
 
       // Calculate total grid height and vertical padding
       const gridHeight = this.tileSize * rows;

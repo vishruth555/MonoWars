@@ -10,7 +10,7 @@ import (
 
 func main() {
 	lobby := game.NewLobby()
-	fs := http.FileServer(http.Dir("./static"))
+	fs := http.FileServer(http.Dir("./docs"))
 	http.Handle("/", fs)
 	http.HandleFunc("/ws", lobby.AddPlayer)
 
