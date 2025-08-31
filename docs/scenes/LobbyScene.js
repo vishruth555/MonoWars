@@ -25,14 +25,16 @@ class LobbyScene extends Phaser.Scene {
 
 }
 
-class LoadingScene extends Phaser.Scene {
-  constructor() {
-    super("LoadingScene");
+class ErrorScene extends Phaser.Scene {
+  constructor () {
+    super("ErrorScene")
   }
 
+  preload() {}
+
   create() {
-    this.loadingText = this.add.text(parent.clientWidth/2, parent.clientHeight/2, "test", {
-      fontSize: "40px",
+      const errorMessage = this.add.text(parent.clientWidth/2, parent.clientHeight/2, "server is down :(", {
+      fontSize: "20px",
       fill: "#0f0",
       backgroundColor: "#222",
       padding: { x: 10, y: 5 }
@@ -40,3 +42,6 @@ class LoadingScene extends Phaser.Scene {
       .setOrigin(0.5)
     }
 }
+
+
+
