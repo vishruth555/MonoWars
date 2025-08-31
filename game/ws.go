@@ -15,7 +15,8 @@ type GameInit struct {
 	Player2 PlayerData  `json:"player2Data"`
 }
 type GameEnd struct {
-	Type string `json:"type"`
+	Type   string `json:"type"`
+	Winner int    `json:"winner"`
 }
 
 type Tick struct {
@@ -65,20 +66,20 @@ func SendGameInit(g *Game) {
 		Player2: PlayerData{Id: g.Players[1].Id, XPos: g.Players[1].X, YPos: g.Players[1].Y, Bullets: g.Players[1].Bullets}}
 	Broadcast(g, data)
 }
-func SendGameEnd(g *Game) {
+func SendGameEnd(g *Game, id int) {
 	data := GameEnd{
-		Type: "GameEnd",
+		Type:   "GameEnd",
+		Winner: id,
 	}
 	Broadcast(g, data)
 }
 
-func SendTick(g *Game, tickCount int) bool {
+func SendTick(g *Game, tickCount int) {
 	var diffs []Diff
-	isGameOver := false
 
 	//player diffs
-	for index, player := range g.Players {
-		isChanged := g.MovePlayer(index)
+	for _, player := range g.Players {
+		isChanged := player.Move(g)
 		if isChanged {
 			diffs = append(diffs, Diff{
 				Entity: fmt.Sprintf("Player%dData", player.Id),
@@ -94,7 +95,7 @@ func SendTick(g *Game, tickCount int) bool {
 		if !bullet.isActive {
 			continue
 		}
-		isActive := g.MoveBullet(index)
+		isActive := bullet.Move(g)
 		bulletData := BulletData{Id: bullet.Id, BulletId: index + 1, XPos: bullet.X, YPos: bullet.Y}
 		if isActive {
 			bulletData.State = "active"
@@ -127,33 +128,10 @@ func SendTick(g *Game, tickCount int) bool {
 		}
 	}
 
-	//game over check
-	for _, bullet := range g.Bullets {
-		var dx, dy int
-		if bullet.Id == 1 {
-			dx = int(bullet.X) - int(g.Players[1].X)
-			dy = int(bullet.Y) - int(g.Players[1].Y)
-			if dx == 0 && dy == 0 {
-				//game over for player2
-				isGameOver = true
-				break
-			}
-		} else if bullet.Id == 2 {
-			dx = int(bullet.X) - int(g.Players[0].X)
-			dy = int(bullet.Y) - int(g.Players[0].Y)
-			if dx == 0 && dy == 0 {
-				//game over for player1
-				isGameOver = true
-				break
-			}
-		}
-	}
-
 	data := Tick{
 		Type: "Tick",
 		Id:   tickCount,
 		Diff: diffs,
 	}
 	Broadcast(g, data)
-	return isGameOver
 }

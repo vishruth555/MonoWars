@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -81,14 +82,15 @@ func (p *Player) Listen(ws chan Input) {
 	}
 }
 
-// func (p *Player) SetVelocity(dx, dy float32) {
-// 	p.Velx = dx
-// 	p.Vely = dy
-// }
+const (
+	friction           = 0.2
+	MaxSpeed           = 0.2
+	accelerationFactor = 0.75
+)
 
 func (p *Player) setAcceleration(dx, dy float32) {
-	p.ay = dy
-	p.ax = dx
+	p.ay = dy * accelerationFactor
+	p.ax = dx * accelerationFactor
 }
 func (p *Player) SetDirection() {
 	switch {
@@ -115,11 +117,6 @@ func (p *Player) HandleInput(input Input) bool {
 	}
 	return false
 }
-
-const (
-	friction = 0.2
-	MaxSpeed = 0.2
-)
 
 func (p *Player) ApplyVelocity(dt float32) {
 	p.Velx += p.ax * dt
@@ -169,4 +166,47 @@ func (p *Player) ApplyFriction(dt float32) {
 func (p *Player) Stop() {
 	p.Velx = 0
 	p.Vely = 0
+}
+
+func (player *Player) Move(g *Game) bool {
+	dt := float32(g.tickRate) / float32(time.Second)
+	player.ApplyVelocity(dt)
+	player.ApplyFriction(dt)
+
+	if player.Vely == 0 && player.Velx == 0 {
+		return false
+	}
+
+	newX := player.X + player.Velx
+	newY := player.Y + player.Vely
+
+	x1 := int(newX)
+	y1 := int(newY)
+
+	x2 := int(newX + 0.8)
+	y2 := int(newY + 0.8)
+
+	if g.TileMap[y1][x1] != 0 && g.TileMap[y1][x1] != player.Id {
+		if g.TileMap[y2][x2] != 0 && g.TileMap[y2][x2] != player.Id {
+			player.X = newX
+			player.Y = newY
+			return true
+		}
+	}
+
+	// ceilX := int(math.Ceil(float64(newX)))
+	// ceilY := int(math.Ceil(float64(newY)))
+
+	// floorX := int(math.Floor(float64(newX)))
+	// floorY := int(math.Floor(float64(newY)))
+
+	// if g.TileMap[floorY][floorX] != 0 && g.TileMap[floorY][floorX] != player.Id {
+	// 	if g.TileMap[ceilY][ceilX] != 0 && g.TileMap[ceilY][ceilX] != player.Id {
+	// 		player.X = float32(math.Round(float64(newX*100))) / 100
+	// 		player.Y = float32(math.Round(float64(newY*100))) / 100
+	// 		return true
+	// 	}
+	// }
+	player.Stop()
+	return false
 }

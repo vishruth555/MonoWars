@@ -6,9 +6,20 @@ class MainScene extends Phaser.Scene {
     }
 
     preload() {
-    this.load.image("tileW", "assets/player_white.png"); 
-    this.load.image("tileB", "assets/player_black.png");
-    this.load.image("player", "Player.png");
+    this.load.image("tileW", "assets/tile_white.png"); 
+    this.load.image("tileB", "assets/tile_black.png");
+    this.load.image("bulletW", "assets/bullet_white.png");
+    this.load.image("bulletB", "assets/bullet_black.png");
+
+    // this.load.image("player", "Player.png");
+    this.load.spritesheet("playerIce", "assets/player-ice.png", {
+      frameWidth: 32,
+      frameHeight: 32
+    });
+    this.load.spritesheet("playerLava", "assets/player-lava.png", {
+      frameWidth: 32,
+      frameHeight: 32
+    });
     }
 
     create(){
@@ -27,8 +38,11 @@ class MainScene extends Phaser.Scene {
       else if (data.type == "GameStart"){
         this.loadingScreen.setVisible(false)
         this.createTileMap(data.tileMap)
-        this.createPlayer(data.player1Data)
+        setTimeout(() => {
+                  this.createPlayer(data.player1Data)
         this.createPlayer(data.player2Data)
+        }, 2000)
+
         this.showGameStartOverlay()
       }
       else if (data.type == "Tick") {
@@ -36,6 +50,7 @@ class MainScene extends Phaser.Scene {
       }
       else if(data.type == "GameEnd"){
         console.log("game has ended")
+        console.log("congratulation player ", data.winner)
       }
 
     };
@@ -76,12 +91,15 @@ class MainScene extends Phaser.Scene {
             tileKey = "tileB";
           }
 
-          // Place tile sprite with padding and square aspect ratio
+          setTimeout(() => {
+            // Place tile sprite with padding and square aspect ratio
           this.tileSprites[y][x] = this.add.image(
             x * this.tileSize + this.horizontalPadding,
             y * this.tileSize + this.verticalPadding,
             tileKey
           ).setOrigin(0).setDisplaySize(this.tileSize, this.tileSize);
+          }, (100*y)+(30*x))
+          
         }
       }
       console.log("created tile map of size", rows, cols)
@@ -98,15 +116,56 @@ class MainScene extends Phaser.Scene {
     let xPos = this.getX(playerData.xPos);
     let yPos = this.getY(playerData.yPos);
 
-    const player = {
+    let player;
+    
+    if (playerData.id == 1){
+
+      this.anims.create({
+      key: "blinkIce",
+      frames: [
+        { key: 'playerIce', frame: 0, duration: 600 },
+        { key: 'playerIce', frame: 1, duration: 200 }  
+      ],
+      frameDuration: 2000,
+      repeat: -1
+      });
+
+      player = {
       id: playerData.id,
       tilePos: { x: playerData.xPos, y: playerData.yPos },
       sprite: this.add
-                .image(xPos, yPos, "player")
+                .sprite(xPos, yPos, "playerIce").play("blinkIce")
                 .setOrigin(0)
-                .setDisplaySize(this.tileSize, this.tileSize),
+                .setDisplaySize(this.tileSize*0.8, this.tileSize*0.8),
+    };
+    
 
-    }
+
+    } else {
+
+      this.anims.create({
+      key: "blinkLava",
+      frames: [
+        { key: 'playerLava', frame: 0, duration: 600 }, 
+        { key: 'playerLava', frame: 1, duration: 200 }  
+      ],
+      frameDuration: 2000,
+      repeat: -1
+      });
+
+      player = {
+      id: playerData.id,
+      tilePos: { x: playerData.xPos, y: playerData.yPos },
+      sprite: this.add
+                .sprite(xPos, yPos, "playerLava").play("blinkLava")
+                .setOrigin(0)
+                .setDisplaySize(this.tileSize*0.8, this.tileSize*0.8),
+                
+    };
+    
+  }
+
+
     this.players.push(player)
     }
 
@@ -179,12 +238,19 @@ class MainScene extends Phaser.Scene {
 
       if (state == "active"){
         if(!this.bullets[bulletId]) {
-          const bullet = this.add
-          .image(this.getX(xPos), this.getY(yPos), "player")                
-          .setOrigin(0)
-          .setDisplaySize(this.tileSize, this.tileSize);
-          
-          bullet.setTint(id === 1 ? 0xff0000 : 0x0000ff); // red/blue per player
+          let bullet
+          if (id == 1) {
+            bullet = this.add
+          .image(this.getX(xPos), this.getY(yPos), "bulletW")                
+          .setOrigin(0.5)
+          // .setDisplaySize(this.tileSize*2, this.tileSize*2);
+          } else {
+            bullet = this.add
+          .image(this.getX(xPos), this.getY(yPos), "bulletB")                
+          .setOrigin(0.5)
+          // .setDisplaySize(this.tileSize*2, this.tileSize*2);
+          }
+
           this.bullets[bulletId] = bullet;
         } else {
           this.bullets[bulletId].setPosition(this.getX(xPos), this.getY(yPos))

@@ -3,7 +3,6 @@ package game
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"sync"
 	"time"
 
@@ -96,76 +95,15 @@ func (g *Game) Start() {
 
 		case <-tick.C:
 			count++
-			if SendTick(g, count) {
+			SendTick(g, count)
+
+			if g.isGameOver() {
 				fmt.Println("Game over!")
-				SendGameEnd(g)
 				return
 			}
+
 		}
 	}
-}
-
-func (g *Game) MovePlayer(index int) bool {
-	player := g.Players[index]
-	dt := float32(g.tickRate) / float32(time.Second)
-
-	player.ApplyVelocity(dt)
-	player.ApplyFriction(dt)
-
-	if player.Vely == 0 && player.Velx == 0 {
-		return false
-	}
-
-	newX := player.X + player.Velx
-	newY := player.Y + player.Vely
-
-	ceilX := int(math.Ceil(float64(newX)))
-	ceilY := int(math.Ceil(float64(newY)))
-
-	floorX := int(math.Floor(float64(newX)))
-	floorY := int(math.Floor(float64(newY)))
-
-	if g.TileMap[floorY][floorX] != 0 && g.TileMap[floorY][floorX] != player.Id {
-		if g.TileMap[ceilY][ceilX] != 0 && g.TileMap[ceilY][ceilX] != player.Id {
-			player.X = float32(math.Round(float64(newX*100))) / 100
-			player.Y = float32(math.Round(float64(newY*100))) / 100
-			return true
-		}
-	}
-	player.Stop()
-	return false
-}
-
-func (g *Game) MoveBullet(index int) bool {
-	bullet := g.Bullets[index]
-	var xPos, yPos int
-	switch bullet.Dir {
-	case Left:
-		bullet.X -= MaxBulletSpeed
-		xPos = int(math.Floor(float64(bullet.X)))
-		yPos = int(bullet.Y)
-	case Right:
-		bullet.X += MaxBulletSpeed
-		xPos = int(math.Ceil(float64(bullet.X)))
-		yPos = int(bullet.Y)
-	case Up:
-		bullet.Y -= MaxBulletSpeed
-		yPos = int(math.Floor(float64(bullet.Y)))
-		xPos = int(bullet.X)
-	case Down:
-		bullet.Y += MaxBulletSpeed
-		yPos = int(math.Ceil(float64(bullet.Y)))
-		xPos = int(bullet.X)
-	}
-
-	if g.TileMap[yPos][xPos] == 0 {
-		g.Bullets[index].isActive = false
-		return false
-	}
-	if g.TileMap[yPos][xPos] == bullet.Id {
-		g.SwapTile(xPos, yPos)
-	}
-	return true
 }
 
 func (g *Game) SwapTile(xPos, yPos int) {
@@ -174,6 +112,32 @@ func (g *Game) SwapTile(xPos, yPos int) {
 	} else {
 		g.TileMap[yPos][xPos] = 1
 	}
+}
+
+func (g *Game) isGameOver() bool {
+
+	for _, bullet := range g.Bullets {
+		var dx, dy int
+		switch bullet.Id {
+		case 1:
+			dx = int(bullet.X) - int(g.Players[1].X)
+			dy = int(bullet.Y) - int(g.Players[1].Y)
+			if dx == 0 && dy == 0 {
+				//game over for player2
+				SendGameEnd(g, 1)
+				return true
+			}
+		case 2:
+			dx = int(bullet.X) - int(g.Players[0].X)
+			dy = int(bullet.Y) - int(g.Players[0].Y)
+			if dx == 0 && dy == 0 {
+				//game over for player1
+				SendGameEnd(g, 2)
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (g *Game) GetState() ([]byte, error) {
