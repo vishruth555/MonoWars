@@ -6,152 +6,113 @@
   <title>MonoWars — GameBoy UI</title>
 
   <style>
-    /* ---------- Colors / tokens ------------------------------------- */
-    :root{
+    /* ---------- Colors & Custom Properties ------------------------ */
+    :root {
+      /* --- Customization --- */
+      --game-aspect-ratio: 12 / 16; /* <<< CHANGE THIS VALUE TO YOUR DESIRED ASPECT RATIO */
+      /* Examples: 1 / 1 (square), 16 / 9 (widescreen), 4 / 3 (classic) */
+
+      /* --- Theme Colors --- */
       --accent-red: #E62727;
       --off-white:  #F3F2EC;
       --light-gray: #DCDCDC;
       --teal:       #1E93AB;
-      --btn-bg:      #333333;    /* directional buttons background */
-      --screen-bg:  #000000;     /* black bezel background */
+      --btn-bg:     #333333;
       --shadow:     rgba(0,0,0,0.35);
-      --ui-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      --ui-font:    system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
     }
 
     /* ---------- Page layout ----------------------------------------- */
-    html,body{
-      height:100%;
-      margin:0;
+    html, body {
+      height: 100%;
+      margin: 0;
       font-family: var(--ui-font);
-      color: #111;
       background: linear-gradient(180deg, var(--off-white), var(--light-gray));
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-      display:flex;
-      align-items:flex-start;
-      justify-content:center;
-      padding:18px;
-      box-sizing:border-box;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 18px;
+      box-sizing: border-box;
     }
 
     /* ---------- GameBoy shell (overall) ----------------------------- */
     .gameboy {
       width: min(450px, 96vw);
-      height: min(850px, 80vh);
-      /* aspect-ratio: 450 / 854; */
+      height: min(850px, 90vh);
       background: linear-gradient(180deg, var(--off-white), var(--light-gray));
       border-radius: 24px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      padding:22px;
-      gap:14px;
-      box-sizing:border-box;
-    }
-
-    @media (min-width: 900px){
-      html,body { align-items:center; padding:40px; background: linear-gradient(180deg, #3e3e3e, #2f2f2f);}
-      .gameboy { 
-        width: 450px; 
-        box-shadow:
-        0 20px 40px rgba(0,0,0,0.45),
-        inset 0 6px 12px rgba(255,255,255,0.5),
-        inset 0 -6px 12px rgba(0,0,0,0.04);}
-    }
-
-    /* ---------- Screen bezel (black with padding) ------------------- */
-    .screen-bezel{
-      width: min(430px, 92%);
-      aspect-ratio: 430 / 557;
-      background: var(--screen-bg);
-      border-radius: 12px;
-      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 22px;
+      gap: 20px;
       box-sizing: border-box;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      box-shadow: 0 8px 18px var(--shadow), inset 0 -3px 8px rgba(255,255,255,0.02);
-      position:relative;
-      overflow:hidden;
     }
 
-    /* ---------- THE CANVAS ------------------------------------------ */
-    #screen {
-      width: min(390px, 100%);
-      max-height: 515px;
-      aspect-ratio: 390 / 515;
-      display:block;
-      background: linear-gradient(180deg,#050608,#000);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.6), inset 0 0 18px rgba(0,0,0,0.75);
-      border-radius:6px;
-      overflow:hidden;
-      position:relative;
-    }
-    #screen canvas, #gameCanvas {
-      width:100% !important;
-      height:100% !important;
-      display:block;
-      /* image-rendering: pixelated; */
+    /* ---------- The NEW Game Screen Container ----------------------- */
+    #gameArea {
+      width: 100%; /* Occupy the full width of the .gameboy parent */
+      aspect-ratio: var(--game-aspect-ratio);
+      max-height: 70%; /* Prevent the screen from being excessively tall */
+
+      /* Merged styles from the original .screen-bezel and #screen */
+      background: linear-gradient(180deg, #050608, #000);
+      border-radius: 12px;
+      box-shadow: 0 8px 18px var(--shadow), inset 0 0 18px rgba(0,0,0,0.75);
+      
+      /* For positioning the canvas */
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    /* screen label at bottom of bezel */
-    .screen-label{
-      position:absolute;
-      bottom:8px;
-      left:50%;
-      transform: translateX(-50%);
-      font-size:14px;
-      font-weight:800;
-      color: var(--off-white);
-      letter-spacing:0.6px;
-      pointer-events:none;
-      text-shadow: 0 1px 0 rgba(0,0,0,0.6);
+    /* This rule ensures the canvas created by Phaser fills the container */
+    #gameArea canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
     }
 
     /* ---------- Controls area -------------------------------------- */
     #controls {
-      width: min(430px, 92%);
+      width: 100%;
       margin: 0 auto;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:14px;
-      padding:6px 4px;
-      box-sizing:border-box;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      padding: 6px 4px;
+      box-sizing: border-box;
     }
 
     /* D-pad container: plus background + directional buttons */
     #dpad {
-      position:relative;
-      z-index:0;               /* base stacking context for pseudo-elements */
+      position: relative;
+      z-index: 0;
       width: 160px;
       height: 160px;
       flex: 0 0 160px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      touch-action:none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
     }
 
-    #dpad::before, #dpad::after{
-      content:"";
-      position:absolute;
-      background: var(--btn-bg);   /* match directional buttons */
-      border-radius:8px;
+    #dpad::before, #dpad::after {
+      content: "";
+      position: absolute;
+      background: var(--btn-bg);
+      border-radius: 8px;
       box-shadow: 0 6px 12px rgba(0,0,0,0.25);
-      z-index:0; /* explicitly underneath the .btn elements */
-      transform-origin:center;
+      z-index: 0;
+      transform-origin: center;
     }
-    /* vertical bar */
-    #dpad::before{
-      width: 32px;
-      height: 82%;
-    }
-    /* horizontal bar */
-    #dpad::after{
-      height: 32px;
-      width: 82%;
-    }
+    #dpad::before { width: 32px; height: 82%; } /* vertical bar */
+    #dpad::after { height: 32px; width: 82%; } /* horizontal bar */
 
     /* directional buttons */
     .btn {
@@ -166,22 +127,20 @@
       font-size: 0.7rem;
       user-select: none;
       -webkit-user-select: none;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      touch-action:none;
-      user-select:none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
       box-shadow: 2px 8px 16px rgba(0,0,0,0.35);
-      z-index:2; /* above the pseudo-elements */
+      z-index: 2;
       transition: transform 120ms ease, box-shadow 120ms ease;
     }
 
-    #up    { top: 8%;    left: 50%; transform: translate(-50%, -0%); }
-    #down  { bottom: 8%; left: 50%; transform: translate(-50%, 0%); }
-    #left  { left: 8%;   top: 50%; transform: translate(0%, -50%); }
-    #right { right: 8%;  top: 50%; transform: translate(0%, -50%); }
+    #up    { top: 8%; left: 50%; transform: translate(-50%, 0); }
+    #down  { bottom: 8%; left: 50%; transform: translate(-50%, 0); }
+    #left  { left: 8%; top: 50%; transform: translate(0, -50%); }
+    #right { right: 8%; top: 50%; transform: translate(0, -50%); }
 
-    /* directional button press effect */
     .btn:active {
       transform: translateY(5px) scale(0.985);
       box-shadow: 0 2px 6px rgba(0,0,0,0.28);
@@ -194,32 +153,38 @@
       background: var(--accent-red);
       border-radius: 50%;
       color: var(--off-white);
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       flex: 0 0 64px;
       box-shadow: 0 10px 20px rgba(0,0,0,0.35);
       font-size: 1rem;
       border: none;
-      z-index:2;
+      z-index: 2;
       transition: transform 110ms ease, box-shadow 110ms ease;
     }
 
-    /* shoot press effect */
     #shoot:active {
       transform: scale(0.95);
       box-shadow: 0 6px 12px rgba(0,0,0,0.35), 0 0 10px rgba(230,39,39,0.18);
     }
 
-    /* spacing adjustments */
-    #dpad { margin-left: 6px; }
-    #shoot { margin-right: 6px; }
-
-    /* small helper so the shell doesn't overflow on very small screens */
-    @media (max-height:700px){
-      .gameboy { padding:12px; gap:10px; }
-      #dpad { width: 140px; height:140px; }
-      #shoot { width:56px; height:56px; flex:0 0 56px; }
+    /* --- Media Queries for responsiveness --- */
+    @media (min-width: 900px) {
+      html, body { align-items: center; padding: 40px; background: linear-gradient(180deg, #3e3e3e, #2f2f2f); }
+      .gameboy { 
+        width: 450px; 
+        box-shadow:
+        0 20px 40px rgba(0,0,0,0.45),
+        inset 0 6px 12px rgba(255,255,255,0.5),
+        inset 0 -6px 12px rgba(0,0,0,0.04);
+      }
+    }
+    
+    @media (max-height: 700px) {
+      .gameboy { padding: 12px; gap: 10px; }
+      #dpad { width: 140px; height: 140px; flex-basis: 140px; }
+      #shoot { width: 56px; height: 56px; flex-basis: 56px; }
     }
 
   </style>
@@ -227,39 +192,20 @@
 
 <body>
   <div class="gameboy" role="application" aria-label="MonoWars GameBoy shell">
-    <!-- Screen bezel / Game area -->
-    <div class="screen-bezel" id="gameArea">
-      <!-- screen container where Phaser can mount the canvas -->
-      <div id="screen" role="region" aria-label="game screen">
-        <!-- Optional existing canvas: your engine may replace or use this -->
-        <canvas id="gameCanvas" width="390" height="515"></canvas>
-      </div>
+    <div id="gameArea" role="region" aria-label="Game Screen"></div>
 
-      <!-- label at bottom of bezel -->
-      <div class="screen-label"></div>
-    </div>
-
-    <!-- Controls -->
     <div id="controls">
-      <!-- D-pad (plus-shaped background) -->
-      <div id="dpad" aria-hidden="false" role="group" aria-label="Directional pad">
+      <div id="dpad" role="group" aria-label="Directional pad">
         <button id="up"    class="btn" aria-label="Up">○</button>
         <button id="down"  class="btn" aria-label="Down">○</button>
         <button id="left"  class="btn" aria-label="Left">○</button>
         <button id="right" class="btn" aria-label="Right">○</button>
       </div>
 
-      <!-- Shoot button: circular and textless -->
       <button id="shoot" aria-label="Shoot"></button>
     </div>
-
-    <!-- roomDisplay remains commented out -->
-    <!--
-    <div id="roomDisplay">Room no: <span id="code">—</span></div>
-    -->
   </div>
 
-  <!-- keep your scripts (Phaser will typically inject or use the canvas inside #screen) -->
   <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
   <script src="scenes/LobbyScene.js"></script>
   <script src="scenes/MainScene.js"></script>
